@@ -4,6 +4,16 @@ Chronological record of notable engineering decisions and the reasoning behind t
 
 ---
 
+## Input capture built before the database layer, with a stubbed store
+
+**Decision:** Milestone 2 (input capture UI) was built ahead of the database milestone, using a temporary in-memory store (`lib/entries-store.ts`) instead of Drizzle/Postgres.
+
+**Why:** Getting the input → detect → persist → display loop working end-to-end early de-risks the UI and API contract before wiring up real persistence. The store exposes the same `createEntry`/`getEntry` shape the Drizzle-backed version will use, so the database milestone only needs to swap the implementation, not the call sites. The in-memory map resets on server restart — acceptable for this milestone, not for production.
+
+**Alternative considered:** Build the database layer first, per the original milestone order. Rejected for this pass — explicitly reprioritized to validate the input UI sooner.
+
+---
+
 ## No explicit `status` field on entries
 
 **Decision:** The `entries` table has no `status`/workflow-state column.
