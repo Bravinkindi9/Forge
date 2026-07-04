@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { detectInputType, isValidUrl } from "@/lib/detect-input";
-import { EntryPreview } from "@/components/EntryPreview";
+import { EntryPreview, type ExtractionState } from "@/components/EntryPreview";
 import type { Entry } from "@/lib/entries-store";
 
 export default function Home() {
@@ -10,9 +10,32 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [entry, setEntry] = useState<Entry | null>(null);
+  const [extraction, setExtraction] = useState<ExtractionState>({ status: "idle" });
 
   const trimmed = input.trim();
   const invalidUrl = trimmed.length > 0 && detectInputType(trimmed) === "url" && !isValidUrl(trimmed);
+
+  async function runExtraction(entryId: string) {
+    setExtraction({ status: "loading" });
+    try {
+      const res = await fetch("/api/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to extract content from that URL.");
+      }
+      setEntry(data.entry);
+      setExtraction({ status: "done", title: data.title ?? null });
+    } catch (err) {
+      setExtraction({
+        status: "error",
+        message: err instanceof Error ? err.message : "Failed to extract content from that URL.",
+      });
+    }
+  }
 
   async function handleSubmit() {
     if (!trimmed || invalidUrl || loading) return;
@@ -29,6 +52,9 @@ export default function Home() {
         throw new Error(data.error || "Something went wrong. Please try again.");
       }
       setEntry(data.entry);
+      if (data.entry.inputType === "url") {
+        void runExtraction(data.entry.id);
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -40,6 +66,7 @@ export default function Home() {
     setEntry(null);
     setInput("");
     setError(null);
+    setExtraction({ status: "idle" });
   }
 
   return (
@@ -48,7 +75,12 @@ export default function Home() {
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Forge</h1>
 
         {entry ? (
-          <EntryPreview entry={entry} onReset={handleReset} />
+          <EntryPreview
+            entry={entry}
+            extraction={extraction}
+            onReset={handleReset}
+            onRetryExtraction={() => runExtraction(entry.id)}
+          />
         ) : (
           <>
             <textarea

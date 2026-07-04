@@ -4,6 +4,13 @@ All notable milestone-level progress for Forge is recorded here.
 
 ## Unreleased
 
+### Milestone 3 — URL Extraction Pipeline
+- `lib/jina.ts`: extracts article title + content from a URL via Jina Reader's free `r.jina.ai` endpoint (no API key required)
+- `POST /api/extract`: takes an `entryId`, extracts its URL's content, and persists it to `extractedContent`
+- Homepage automatically triggers extraction after a URL entry is created, with a loading state, a title + content preview, and a retry-on-error banner
+- Verified end-to-end against real URLs (including a real extraction and a genuinely unresolvable domain) — errors surface Jina's actual message
+- Unit tests for the Jina response parser and error-message parsing (pure logic, no network in tests)
+
 ### Milestone 1 — Database Layer
 - Added Drizzle ORM schema for `entries` (`lib/schema.ts`) matching the frozen data model
 - `lib/db.ts`: lazily-initialized Drizzle client over `drizzle-orm/postgres-js`, connects only on first query so `next build` never requires a live database
