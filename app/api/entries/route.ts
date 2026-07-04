@@ -20,7 +20,12 @@ export async function POST(request: NextRequest) {
   }
 
   const inputType = detectInputType(rawInput);
-  const entry = createEntry({ rawInput, inputType });
 
-  return NextResponse.json({ entry }, { status: 201 });
+  try {
+    const entry = await createEntry({ rawInput, inputType });
+    return NextResponse.json({ entry }, { status: 201 });
+  } catch (error) {
+    console.error("Failed to create entry:", error);
+    return NextResponse.json({ error: "Failed to save entry. Please try again." }, { status: 502 });
+  }
 }

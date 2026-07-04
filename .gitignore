@@ -43,3 +43,6 @@ next-env.d.ts
 
 # claude harness local state
 .claude/scheduled_tasks.lock
+
+.vercel
+.env*
