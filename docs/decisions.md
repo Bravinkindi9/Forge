@@ -4,6 +4,30 @@ Chronological record of notable engineering decisions and the reasoning behind t
 
 ---
 
+## `postgres` + `drizzle-orm/postgres-js` instead of `@vercel/postgres`
+
+**Decision:** Database access goes through the plain `postgres` driver and `drizzle-orm/postgres-js`, not the `@vercel/postgres` package.
+
+**Why:** `@vercel/postgres` is deprecated — Vercel migrated its Postgres offering onto Neon and no longer maintains that client. `postgres` connects with any standard Postgres connection string (works identically with Vercel/Neon or any other provider) and isn't tied to a single vendor's SDK, which fits "keep architecture clean" better than depending on a deprecated package from day one.
+
+---
+
+## Lazy Drizzle client instead of connecting at import time
+
+**Decision:** `lib/db.ts` wraps the Drizzle client in a `Proxy` that only opens the Postgres connection on first real query, instead of connecting as soon as the module is imported.
+
+**Why:** Next.js's build step collects page/route data for every API route, which imports `lib/db.ts` even though no query actually runs at build time. An eager connection (or an eager throw when `POSTGRES_URL` is unset) broke `next build` in environments without a live database. Lazy connection means `build`/`lint`/tests never require real database credentials, while runtime behavior is unchanged.
+
+---
+
+## Local `.env.local` sourced via `vercel env pull`, from Production not Development
+
+**Decision:** Local development pulls environment variables with `vercel env pull .env.local --environment=production`, not the default `development` target.
+
+**Why:** The Neon-backed Postgres integration only populated `POSTGRES_URL` (and related vars) for the Production and Preview environments, not Development — pulling the default target returned nothing useful. Separately, Vercel marks these connection-string variables as "sensitive," which means `vercel env pull` returns them as empty strings regardless of environment; the real value had to be copied manually from the Vercel/Neon dashboard into `.env.local`. `drizzle.config.ts` explicitly loads `.env.local` via `dotenv` (drizzle-kit only auto-loads `.env` by default).
+
+---
+
 ## Input capture built before the database layer, with a stubbed store
 
 **Decision:** Milestone 2 (input capture UI) was built ahead of the database milestone, using a temporary in-memory store (`lib/entries-store.ts`) instead of Drizzle/Postgres.
