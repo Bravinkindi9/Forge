@@ -4,6 +4,16 @@ Chronological record of notable engineering decisions and the reasoning behind t
 
 ---
 
+## Vercel env vars must be added per-provider; the Neon integration doesn't cover Gemini
+
+**Observation (Milestone 9):** Production deployment initially failed all AI calls with "GEMINI_API_KEY is not set," even though local `.env.local` had it. The Neon/Postgres integration automatically populates its own env vars on Vercel (`POSTGRES_URL` and friends), but `GEMINI_API_KEY` was never added there — it only ever existed in the local `.env.local` pulled down for development.
+
+**Fix:** `vercel env add GEMINI_API_KEY production`, then a fresh deployment (`vercel --prod`) — env var changes don't apply to already-running deployments, a new deployment is required to pick them up.
+
+**Implication going forward:** Any env var added locally for a new integration must be separately added to Vercel's project settings before deploying — nothing does this automatically except the database integration.
+
+---
+
 ## Shared `lib/api.ts` helpers and `ErrorBanner` component (Milestone 9 audit)
 
 **Decision:** Extracted `parseJsonBody`/`getStringField` (`lib/api.ts`) and a shared `ErrorBanner` component, replacing boilerplate that had been copy-pasted across all four POST routes and five UI components respectively.

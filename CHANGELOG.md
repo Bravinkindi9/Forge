@@ -2,7 +2,7 @@
 
 All notable milestone-level progress for Forge is recorded here.
 
-## Unreleased
+## v1.0.0 — 2026-07-05
 
 ### Milestone 9 — Repository Audit, Polish & Deploy
 - Full repository audit before release: reviewed every file for duplication, dead code, unused dependencies, naming, accessibility, error handling, and security. Findings and disposition below; nothing needed inventing — the codebase was already close to standard.
@@ -15,6 +15,9 @@ All notable milestone-level progress for Forge is recorded here.
 - Verified the full app end-to-end: every route, every API endpoint (happy path and validation errors), database persistence across a server restart, and Jina extraction against a real URL. Gemini's daily free-tier quota was still exhausted from Milestone 7's testing at the start of this milestone, so question/draft *generation* itself was verified via already-saved data rather than fresh model calls — quality was already confirmed against the real API in Milestones 4 and 6
 - Responsive and dark/light-mode pass across mobile/tablet/desktop widths — layout was already sound; no responsive bugs found
 - `build`, `lint`, and all 21 unit tests pass
+- **Deployed to Vercel production** at https://forge-two-dun.vercel.app (Vercel's GitHub integration auto-deploys on push to `main`)
+- **Production-only issue found and fixed:** `GEMINI_API_KEY` had only ever been added to local `.env.local`, never to Vercel's environment — the Neon/Postgres vars were present (added automatically by the database integration) but Gemini was not. Added the key via `vercel env add` and triggered a fresh deployment; confirmed fixed when `POST /api/questions` went from "GEMINI_API_KEY is not set" to a normal Gemini quota response
+- Verified against the live production URL: all three entry types create correctly with proper type detection, Jina extraction works against a real URL, answer/draft PATCH and validation errors all behave identically to local, `/history` and `/entry/[id]` render correctly. Real question/draft *generation* against production was attempted but blocked by the same exhausted Gemini daily quota — the fix itself is confirmed correct (error changed from "key not set" to "quota exceeded"), but a live end-to-end generation hasn't been re-confirmed since the quota reset
 
 ### Milestone 8 — History / Past Entries
 - `app/history/page.tsx`: read-only list of past entries (newest first), each showing input type, current stage (derived via `getStage()`), the raw input, and creation timestamp; links through to `/entry/[id]` to resume
