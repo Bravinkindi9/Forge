@@ -2,20 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateStructured, generateText } from "@/lib/ai";
 import { getEntry, updateEntry } from "@/lib/entries-store";
 import { questionsPrompt, questionsSchema, summaryPrompt } from "@/lib/prompts";
+import { getStringField, parseJsonBody } from "@/lib/api";
 
 export async function POST(request: NextRequest) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
+  const body = await parseJsonBody(request);
+  if (body === null) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const entryId =
-    typeof body === "object" && body !== null && "entryId" in body && typeof (body as { entryId: unknown }).entryId === "string"
-      ? (body as { entryId: string }).entryId
-      : "";
-
+  const entryId = getStringField(body, "entryId") ?? "";
   if (!entryId) {
     return NextResponse.json({ error: "entryId is required." }, { status: 400 });
   }

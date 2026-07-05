@@ -4,6 +4,18 @@ All notable milestone-level progress for Forge is recorded here.
 
 ## Unreleased
 
+### Milestone 9 — Repository Audit, Polish & Deploy
+- Full repository audit before release: reviewed every file for duplication, dead code, unused dependencies, naming, accessibility, error handling, and security. Findings and disposition below; nothing needed inventing — the codebase was already close to standard.
+- Extracted shared request-parsing helpers (`lib/api.ts`: `parseJsonBody`, `getStringField`) into all four POST routes, removing near-identical body-parsing boilerplate
+- Extracted a shared `ErrorBanner` component, replacing five copies of the same retry-banner markup across `page.tsx`, `EntryPreview`, `AnswerForm`, `DraftView`, `EntryFlow`
+- Added server-side URL re-validation to `POST /api/entries` (previously only the client button-disable checked `isValidUrl`; a malformed URL could reach the API directly)
+- Accessibility: associated every `<label>` with its `<textarea>` via `htmlFor`/`id`; added `aria-live`/`role="alert"` to loading and error/status messages so screen readers announce async updates
+- Removed unused `create-next-app` boilerplate assets (`public/{file,globe,next,vercel,window}.svg`) — nothing referenced them
+- Fixed a stale doc reference (`docs/decisions.md` said `lib/gemini.ts`; the real file is `lib/ai.ts`), deduplicated `.gitignore`, expanded the README's scripts table and added a routes overview
+- Verified the full app end-to-end: every route, every API endpoint (happy path and validation errors), database persistence across a server restart, and Jina extraction against a real URL. Gemini's daily free-tier quota was still exhausted from Milestone 7's testing at the start of this milestone, so question/draft *generation* itself was verified via already-saved data rather than fresh model calls — quality was already confirmed against the real API in Milestones 4 and 6
+- Responsive and dark/light-mode pass across mobile/tablet/desktop widths — layout was already sound; no responsive bugs found
+- `build`, `lint`, and all 21 unit tests pass
+
 ### Milestone 8 — History / Past Entries
 - `app/history/page.tsx`: read-only list of past entries (newest first), each showing input type, current stage (derived via `getStage()`), the raw input, and creation timestamp; links through to `/entry/[id]` to resume
 - Explicitly forced dynamic rendering (`export const dynamic = "force-dynamic"`) — Next.js had statically prerendered the page at build time by default, which would have baked in a stale/empty entries list instead of querying fresh on each request

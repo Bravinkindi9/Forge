@@ -24,15 +24,22 @@ See [docs/vision.md](docs/vision.md) for the full product philosophy and [docs/d
 
 - Next.js (App Router) + TypeScript
 - Tailwind CSS
-- Drizzle ORM + Vercel Postgres
-- Vercel AI SDK + Gemini
-- Jina Reader (URL extraction)
+- Drizzle ORM + Vercel Postgres (Neon-backed, via `postgres`/`drizzle-orm/postgres-js`)
+- Vercel AI SDK + Gemini (isolated behind `lib/ai.ts`)
+- Jina Reader (URL extraction, free tier, no key required)
+
+## How it works
+
+- `/` — start a new entry (paste a URL, an article, or write a raw thought)
+- `/entry/[id]` — the guided flow for one entry: extraction (URL only) → summary + questions → your answers → generated draft → edit and copy
+- `/history` — a read-only list of past entries, linking back into `/entry/[id]` to resume
 
 ## Getting started
 
 ```bash
 npm install
-cp .env.example .env.local   # fill in the values as each milestone requires them
+cp .env.example .env.local   # fill in POSTGRES_URL, GEMINI_API_KEY (JINA_API_KEY is optional)
+npm run db:push              # create the entries table
 npm run dev
 ```
 
@@ -46,6 +53,10 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run build` | Production build |
 | `npm run start` | Run the production build |
 | `npm run lint` | Lint the codebase |
+| `npm test` | Run the unit test suite |
+| `npm run db:push` | Push the schema to the database |
+| `npm run db:generate` | Generate a versioned migration from schema changes |
+| `npm run db:studio` | Open Drizzle Studio against the configured database |
 
 ## Project status
 

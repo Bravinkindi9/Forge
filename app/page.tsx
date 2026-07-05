@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { detectInputType, isValidUrl } from "@/lib/detect-input";
+import { ErrorBanner } from "@/components/ErrorBanner";
 
 export default function Home() {
   const router = useRouter();
@@ -59,14 +60,7 @@ export default function Home() {
             This doesn&apos;t look like a valid URL.
           </p>
         )}
-        {error && (
-          <div className="flex items-center justify-between gap-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-            <span>{error}</span>
-            <button onClick={handleSubmit} className="shrink-0 font-medium underline">
-              Retry
-            </button>
-          </div>
-        )}
+        {error && <ErrorBanner message={error} onRetry={handleSubmit} />}
         <button
           onClick={handleSubmit}
           disabled={!trimmed || invalidUrl || loading}

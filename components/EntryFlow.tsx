@@ -7,6 +7,7 @@ import { getStage } from "@/lib/entry-stage";
 import { EntryPreview, type ExtractionState, type QuestionsState } from "@/components/EntryPreview";
 import { AnswerForm } from "@/components/AnswerForm";
 import { DraftView, type DraftState } from "@/components/DraftView";
+import { ErrorBanner } from "@/components/ErrorBanner";
 
 export function EntryFlow({ entryId }: { entryId: string }) {
   const router = useRouter();
@@ -131,18 +132,15 @@ export function EntryFlow({ entryId }: { entryId: string }) {
   }
 
   if (loadError) {
-    return (
-      <div className="flex items-center justify-between gap-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-        <span>{loadError}</span>
-        <button onClick={loadEntry} className="shrink-0 font-medium underline">
-          Retry
-        </button>
-      </div>
-    );
+    return <ErrorBanner message={loadError} onRetry={loadEntry} />;
   }
 
   if (!entry) {
-    return <p className="text-zinc-500 dark:text-zinc-400">Loading...</p>;
+    return (
+      <p aria-live="polite" className="text-zinc-500 dark:text-zinc-400">
+        Loading...
+      </p>
+    );
   }
 
   return (

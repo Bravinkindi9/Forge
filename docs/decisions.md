@@ -4,6 +4,16 @@ Chronological record of notable engineering decisions and the reasoning behind t
 
 ---
 
+## Shared `lib/api.ts` helpers and `ErrorBanner` component (Milestone 9 audit)
+
+**Decision:** Extracted `parseJsonBody`/`getStringField` (`lib/api.ts`) and a shared `ErrorBanner` component, replacing boilerplate that had been copy-pasted across all four POST routes and five UI components respectively.
+
+**Why:** By Milestone 9 the same "parse JSON body, bail on a missing required field" pattern existed nearly verbatim in `/api/entries`, `/api/extract`, `/api/questions`, and `/api/draft`; the same retry-banner markup existed in five places. Neither was a design decision worth preserving — it was accumulated duplication from building routes/components independently milestone by milestone. Consolidating them is a pure simplification: same behavior, less to keep in sync by hand.
+
+**Also added in this pass:** server-side `isValidUrl` re-validation in `POST /api/entries` (previously only enforced client-side), and `htmlFor`/`id` label associations plus `aria-live`/`role="alert"` on async status messages for screen reader support.
+
+---
+
 ## History page fetches entries directly, no `GET /api/entries` route
 
 **Decision:** `/history` is a Server Component that calls `listEntries()` directly, rather than fetching a `GET /api/entries` endpoint.
@@ -108,6 +118,6 @@ Chronological record of notable engineering decisions and the reasoning behind t
 
 ## Gemini as the sole configured provider, via the Vercel AI SDK
 
-**Decision:** All AI calls go through the Vercel AI SDK's provider abstraction (`lib/gemini.ts`), with Gemini as the only configured provider for V1.
+**Decision:** All AI calls go through the Vercel AI SDK's provider abstraction (`lib/ai.ts`), with Gemini as the only configured provider for V1.
 
-**Why:** Gemini's free tier is sufficient for a single-user daily tool, and the AI SDK abstraction means switching providers later (if quota or quality becomes a problem) is a one-file change, not an application-wide rewrite.
+**Why:** Gemini's free tier is sufficient for a single-user daily tool, and the AI SDK abstraction means switching providers later (if quota or quality becomes a problem) is a one-file change, not an application-wide rewrite. See the later "AI provider isolated entirely behind `lib/ai.ts`" entry for how this was implemented in Milestone 4.

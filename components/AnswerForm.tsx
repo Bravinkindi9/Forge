@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Entry } from "@/lib/entries-store";
 import type { QuestionsState } from "@/components/EntryPreview";
+import { ErrorBanner } from "@/components/ErrorBanner";
 
 const textareaClasses =
   "min-h-20 w-full rounded-lg border border-zinc-300 bg-white p-3 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
@@ -25,18 +26,15 @@ export function AnswerForm({
   const [error, setError] = useState<string | null>(null);
 
   if (questions.status === "loading") {
-    return <p className="text-zinc-500 dark:text-zinc-400">Thinking of questions...</p>;
+    return (
+      <p aria-live="polite" className="text-zinc-500 dark:text-zinc-400">
+        Thinking of questions...
+      </p>
+    );
   }
 
   if (questions.status === "error") {
-    return (
-      <div className="flex items-center justify-between gap-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-        <span>{questions.message}</span>
-        <button onClick={onRetryQuestions} className="shrink-0 font-medium underline">
-          Retry
-        </button>
-      </div>
-    );
+    return <ErrorBanner message={questions.message} onRetry={onRetryQuestions} />;
   }
 
   if (!entry.questions) return null;
@@ -64,10 +62,11 @@ export function AnswerForm({
 
       {entry.questions.map((question, i) => (
         <div key={i} className="flex flex-col gap-1">
-          <label className="text-zinc-900 dark:text-zinc-50">
+          <label htmlFor={`answer-${i}`} className="text-zinc-900 dark:text-zinc-50">
             {i + 1}. {question}
           </label>
           <textarea
+            id={`answer-${i}`}
             className={textareaClasses}
             value={answers[i]}
             onChange={(e) =>
@@ -79,10 +78,11 @@ export function AnswerForm({
       ))}
 
       <div className="flex flex-col gap-1">
-        <label className="text-zinc-900 dark:text-zinc-50">
+        <label htmlFor="additional-thoughts" className="text-zinc-900 dark:text-zinc-50">
           Anything else you want to add? (optional)
         </label>
         <textarea
+          id="additional-thoughts"
           className={textareaClasses}
           value={additionalThoughts}
           onChange={(e) => setAdditionalThoughts(e.target.value)}
@@ -90,14 +90,7 @@ export function AnswerForm({
         />
       </div>
 
-      {error && (
-        <div className="flex items-center justify-between gap-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-          <span>{error}</span>
-          <button onClick={handleSave} className="shrink-0 font-medium underline">
-            Retry
-          </button>
-        </div>
-      )}
+      {error && <ErrorBanner message={error} onRetry={handleSave} />}
 
       {alreadySaved ? (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">Your answers are saved.</p>

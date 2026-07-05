@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getEntry, updateEntry } from "@/lib/entries-store";
+import { parseJsonBody } from "@/lib/api";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -20,14 +21,8 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Entry not found." }, { status: 404 });
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-  }
-
-  if (typeof body !== "object" || body === null) {
+  const body = await parseJsonBody(request);
+  if (body === null || typeof body !== "object") {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 

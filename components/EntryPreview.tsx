@@ -1,4 +1,5 @@
 import type { Entry } from "@/lib/entries-store";
+import { ErrorBanner } from "@/components/ErrorBanner";
 
 export type ExtractionState =
   | { status: "idle" }
@@ -52,16 +53,13 @@ export function EntryPreview({
           </a>
 
           {extraction.status === "loading" && (
-            <p className="text-zinc-500 dark:text-zinc-400">Extracting article...</p>
+            <p aria-live="polite" className="text-zinc-500 dark:text-zinc-400">
+              Extracting article...
+            </p>
           )}
 
           {extraction.status === "error" && (
-            <div className="flex items-center justify-between gap-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-              <span>{extraction.message}</span>
-              <button onClick={onRetryExtraction} className="shrink-0 font-medium underline">
-                Retry
-              </button>
-            </div>
+            <ErrorBanner message={extraction.message} onRetry={onRetryExtraction} />
           )}
 
           {extraction.status === "done" && (
