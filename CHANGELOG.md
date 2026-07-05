@@ -4,6 +4,12 @@ All notable milestone-level progress for Forge is recorded here.
 
 ## Unreleased
 
+### Milestone 8 — History / Past Entries
+- `app/history/page.tsx`: read-only list of past entries (newest first), each showing input type, current stage (derived via `getStage()`), the raw input, and creation timestamp; links through to `/entry/[id]` to resume
+- Explicitly forced dynamic rendering (`export const dynamic = "force-dynamic"`) — Next.js had statically prerendered the page at build time by default, which would have baked in a stale/empty entries list instead of querying fresh on each request
+- Added a "History" link on the homepage and a "New entry" link back from history
+- Verified: resuming a completed entry from history loads it without triggering any AI calls (only `GET /api/entries/[id]`), confirmed via network inspection — no accidental quota usage from browsing history
+
 ### Milestone 7 — Edit & Copy UI
 - `PATCH /api/entries/[id]` now also accepts `draft` edits (validated as a non-empty string)
 - `DraftView` is now editable: changes save automatically on blur (only when the text actually changed), plus a "Copy to clipboard" button with a "Copied!" confirmation

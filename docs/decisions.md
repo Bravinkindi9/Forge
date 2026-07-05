@@ -4,6 +4,16 @@ Chronological record of notable engineering decisions and the reasoning behind t
 
 ---
 
+## History page fetches entries directly, no `GET /api/entries` route
+
+**Decision:** `/history` is a Server Component that calls `listEntries()` directly, rather than fetching a `GET /api/entries` endpoint.
+
+**Why:** The original blueprint listed `GET /api/entries` as part of the API surface, but nothing in the app needs to fetch the list client-side or from outside a Server Component — adding that route would just be an unused layer between the page and the same `lib/entries-store.ts` function it would call anyway. Server Components can read data directly; that's simpler than round-tripping through a self-hosted API with no other consumer.
+
+**Follow-up caveat:** because the page reads data directly with no `fetch`/`cookies`/`headers` call, Next.js initially prerendered it as a **static** page at build time — meaning the entries list would have been baked in from build time instead of refreshed per request. Fixed with `export const dynamic = "force-dynamic"`. Worth remembering for any future Server Component that reads live data without going through an API route.
+
+---
+
 ## `gemini-2.5-flash-lite` free tier is a small daily cap, not just per-minute
 
 **Observation (Milestone 7):** During manual verification, `gemini-2.5-flash-lite` calls started failing with `429 Quota exceeded ... limit: 20`. Waiting the API's own suggested retry delay (30-100s) repeatedly did not clear it — each retry hit the same `limit: 20` error again. This suggests the free tier's `generate_content_free_tier_requests` quota for this key/project is a small daily allotment (not a per-minute rate limit that refills quickly), likely already partly consumed by earlier milestones' testing plus the model-comparison calls made while debugging the M4 quota issue.

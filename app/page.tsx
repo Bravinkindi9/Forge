@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { detectInputType, isValidUrl } from "@/lib/detect-input";
 
 export default function Home() {
@@ -37,7 +38,15 @@ export default function Home() {
   return (
     <div className="flex flex-1 items-center justify-center bg-zinc-50 px-4 dark:bg-black">
       <main className="flex w-full max-w-xl flex-col gap-4">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Forge</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Forge</h1>
+          <Link
+            href="/history"
+            className="text-sm font-medium text-zinc-500 underline dark:text-zinc-400"
+          >
+            History
+          </Link>
+        </div>
 
         <textarea
           className="min-h-40 w-full rounded-lg border border-zinc-300 bg-white p-4 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
