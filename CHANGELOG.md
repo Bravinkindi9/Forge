@@ -4,6 +4,15 @@ All notable milestone-level progress for Forge is recorded here.
 
 ## Unreleased
 
+### Milestone 5 — Reflection & Answer Capture UI
+- Implemented the dedicated `/entry/[id]` route from the original blueprint (deferred during Milestones 2-4 for speed): the homepage is now a single-purpose "start a new entry" screen that redirects to `/entry/[id]` on creation, and that route owns extraction, question generation, and answer capture
+- `GET`/`PATCH /api/entries/[id]`: fetch a single entry, and validate + persist `answers` (exactly as many non-empty strings as there are questions) and optional `additionalThoughts`
+- `lib/entry-stage.ts`: pure `getStage(entry)` helper (`new` / `awaiting_answers` / `ready_for_draft` / `complete`) derived entirely from which fields are populated — no stored status field, per the earlier decision
+- `AnswerForm` component: one textarea per question plus an optional "anything else" field, disabled once answers are saved, with a save button gated on all three answers being non-empty
+- `EntryPreview` simplified back to source-material display only; question/answer UI now lives in `AnswerForm`
+- Verified end-to-end: raw thought and URL paths both flow through capture → extraction/questions → answer entry → save, with answers and additional thoughts persisting across a full page reload; PATCH validation rejects wrong answer counts (400) and a missing entry id returns 404
+- Unit tests for `getStage`
+
 ### Milestone 4 — Summary + Question Generation (Gemini)
 - `lib/ai.ts`: the only file that knows about Gemini/`@ai-sdk/google`. Exposes provider-agnostic `generateText(prompt)` and `generateStructured(prompt, schema)`, lazily connecting (same pattern as `lib/db.ts`) so `next build` never requires `GEMINI_API_KEY`
 - `lib/prompts.ts`: small, readable prompt builders (`summaryPrompt`, `questionsPrompt`) sharing a `VOICE_GUIDELINES` constant, plus a `questionsSchema` (zod) so question generation returns exactly three questions in a predictable shape via structured output rather than free-text parsing

@@ -28,20 +28,14 @@ function previewOf(content: string | null): string {
 export function EntryPreview({
   entry,
   extraction,
-  questions,
-  onReset,
   onRetryExtraction,
-  onRetryQuestions,
 }: {
   entry: Entry;
   extraction: ExtractionState;
-  questions: QuestionsState;
-  onReset: () => void;
   onRetryExtraction: () => void;
-  onRetryQuestions: () => void;
 }) {
   return (
-    <div className="flex w-full max-w-xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <p className="text-sm uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
         {LABELS[entry.inputType]}
       </p>
@@ -88,37 +82,6 @@ export function EntryPreview({
           {entry.rawInput}
         </p>
       )}
-
-      {questions.status === "loading" && (
-        <p className="text-zinc-500 dark:text-zinc-400">Thinking of questions...</p>
-      )}
-
-      {questions.status === "error" && (
-        <div className="flex items-center justify-between gap-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-          <span>{questions.message}</span>
-          <button onClick={onRetryQuestions} className="shrink-0 font-medium underline">
-            Retry
-          </button>
-        </div>
-      )}
-
-      {questions.status === "done" && (
-        <div className="flex flex-col gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-          {entry.summary && (
-            <p className="text-zinc-700 dark:text-zinc-300">{entry.summary}</p>
-          )}
-          <ol className="flex list-decimal flex-col gap-2 pl-5 text-zinc-900 dark:text-zinc-50">
-            {entry.questions?.map((question, i) => <li key={i}>{question}</li>)}
-          </ol>
-        </div>
-      )}
-
-      <button
-        onClick={onReset}
-        className="self-start text-sm font-medium text-zinc-500 underline dark:text-zinc-400"
-      >
-        Start over
-      </button>
     </div>
   );
 }

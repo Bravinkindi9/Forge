@@ -1,65 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { detectInputType, isValidUrl } from "@/lib/detect-input";
-import { EntryPreview, type ExtractionState, type QuestionsState } from "@/components/EntryPreview";
-import type { Entry } from "@/lib/entries-store";
 
 export default function Home() {
+  const router = useRouter();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [entry, setEntry] = useState<Entry | null>(null);
-  const [extraction, setExtraction] = useState<ExtractionState>({ status: "idle" });
-  const [questions, setQuestions] = useState<QuestionsState>({ status: "idle" });
 
   const trimmed = input.trim();
   const invalidUrl = trimmed.length > 0 && detectInputType(trimmed) === "url" && !isValidUrl(trimmed);
-
-  async function runQuestions(entryId: string) {
-    setQuestions({ status: "loading" });
-    try {
-      const res = await fetch("/api/questions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entryId }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to generate questions.");
-      }
-      setEntry(data.entry);
-      setQuestions({ status: "done" });
-    } catch (err) {
-      setQuestions({
-        status: "error",
-        message: err instanceof Error ? err.message : "Failed to generate questions.",
-      });
-    }
-  }
-
-  async function runExtraction(entryId: string) {
-    setExtraction({ status: "loading" });
-    try {
-      const res = await fetch("/api/extract", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entryId }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to extract content from that URL.");
-      }
-      setEntry(data.entry);
-      setExtraction({ status: "done", title: data.title ?? null });
-      void runQuestions(entryId);
-    } catch (err) {
-      setExtraction({
-        status: "error",
-        message: err instanceof Error ? err.message : "Failed to extract content from that URL.",
-      });
-    }
-  }
 
   async function handleSubmit() {
     if (!trimmed || invalidUrl || loading) return;
@@ -75,25 +27,11 @@ export default function Home() {
       if (!res.ok) {
         throw new Error(data.error || "Something went wrong. Please try again.");
       }
-      setEntry(data.entry);
-      if (data.entry.inputType === "url") {
-        void runExtraction(data.entry.id);
-      } else {
-        void runQuestions(data.entry.id);
-      }
+      router.push(`/entry/${data.entry.id}`);
     } catch {
       setError("Something went wrong. Please try again.");
-    } finally {
       setLoading(false);
     }
-  }
-
-  function handleReset() {
-    setEntry(null);
-    setInput("");
-    setError(null);
-    setExtraction({ status: "idle" });
-    setQuestions({ status: "idle" });
   }
 
   return (
@@ -101,45 +39,32 @@ export default function Home() {
       <main className="flex w-full max-w-xl flex-col gap-4">
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Forge</h1>
 
-        {entry ? (
-          <EntryPreview
-            entry={entry}
-            extraction={extraction}
-            questions={questions}
-            onReset={handleReset}
-            onRetryExtraction={() => runExtraction(entry.id)}
-            onRetryQuestions={() => runQuestions(entry.id)}
-          />
-        ) : (
-          <>
-            <textarea
-              className="min-h-40 w-full rounded-lg border border-zinc-300 bg-white p-4 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-              placeholder="Paste a URL, an article, or just write down a raw thought..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
-            {invalidUrl && (
-              <p className="text-sm text-red-600 dark:text-red-400">
-                This doesn&apos;t look like a valid URL.
-              </p>
-            )}
-            {error && (
-              <div className="flex items-center justify-between gap-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-                <span>{error}</span>
-                <button onClick={handleSubmit} className="shrink-0 font-medium underline">
-                  Retry
-                </button>
-              </div>
-            )}
-            <button
-              onClick={handleSubmit}
-              disabled={!trimmed || invalidUrl || loading}
-              className="self-start rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-50 dark:text-zinc-900"
-            >
-              {loading ? "Processing..." : "Continue"}
-            </button>
-          </>
+        <textarea
+          className="min-h-40 w-full rounded-lg border border-zinc-300 bg-white p-4 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+          placeholder="Paste a URL, an article, or just write down a raw thought..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        {invalidUrl && (
+          <p className="text-sm text-red-600 dark:text-red-400">
+            This doesn&apos;t look like a valid URL.
+          </p>
         )}
+        {error && (
+          <div className="flex items-center justify-between gap-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+            <span>{error}</span>
+            <button onClick={handleSubmit} className="shrink-0 font-medium underline">
+              Retry
+            </button>
+          </div>
+        )}
+        <button
+          onClick={handleSubmit}
+          disabled={!trimmed || invalidUrl || loading}
+          className="self-start rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-50 dark:text-zinc-900"
+        >
+          {loading ? "Processing..." : "Continue"}
+        </button>
       </main>
     </div>
   );

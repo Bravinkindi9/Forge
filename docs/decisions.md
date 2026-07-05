@@ -74,6 +74,8 @@ Chronological record of notable engineering decisions and the reasoning behind t
 
 **Alternative considered:** Keep everything on the home page with in-memory state. Rejected — would lose the user's place on refresh and needs equivalent logic anyway, just without a URL to show for it.
 
+**Implementation note (Milestone 5):** Milestones 2-4 built extraction and question generation directly on the home page as client state, for speed while those pieces were still being verified individually. Milestone 5 (answer capture) was the point where that started costing more than it saved — answers are exactly the kind of durable, resumable state this decision was written for — so the home page was cut back to its intended single purpose and the `/entry/[id]` route now owns the full flow via a new `EntryFlow` component.
+
 ---
 
 ## Three distinct input types instead of two
