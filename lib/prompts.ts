@@ -32,3 +32,33 @@ Material:
 ${content}
 """`;
 }
+
+export function draftPrompt(params: {
+  summary: string | null;
+  questions: string[];
+  answers: string[];
+  additionalThoughts: string | null;
+}): string {
+  const { summary, questions, answers, additionalThoughts } = params;
+
+  const reflection = questions
+    .map((question, i) => `Q: ${question}\nA: ${answers[i]}`)
+    .join("\n\n");
+
+  const context = [
+    summary ? `Summary of the source material:\n${summary}` : null,
+    `The person's reflection:\n${reflection}`,
+    additionalThoughts ? `Additional thoughts they wanted to add:\n${additionalThoughts}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  return `${VOICE_GUIDELINES}
+
+Using only the reflection below, write ONE LinkedIn post draft in the person's voice.
+Do not invent facts or opinions that aren't grounded in their answers.
+This is a starting draft they will edit themselves, not a final polished post.
+Return only the post text — no title, no preamble, no explanation.
+
+${context}`;
+}

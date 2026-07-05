@@ -4,6 +4,14 @@ All notable milestone-level progress for Forge is recorded here.
 
 ## Unreleased
 
+### Milestone 6 — Draft Generation
+- `draftPrompt` added to `lib/prompts.ts`, sharing `VOICE_GUIDELINES` with the question prompt; instructs the model to return only the post text, grounded strictly in the user's own answers (no invented facts/opinions)
+- `POST /api/draft`: generates the single LinkedIn draft from summary + question/answer pairs + additional thoughts once answers exist, persists it to `draft`
+- `EntryFlow` auto-triggers draft generation right after answers are saved (or on reload, if answers exist but no draft yet); `DraftView` shows a loading state, retry-on-error banner, and the finished draft
+- Verified against the real Gemini API: draft was strongly grounded in the specific answers given (including a requested angle — "push back on the ship-more-code narrative"), first-person, no hashtags/emojis/clichés — met the quality bar without prompt iteration
+- Confirmed draft persists across a full page reload without regenerating
+- Unit tests for `draftPrompt`
+
 ### Milestone 5 — Reflection & Answer Capture UI
 - Implemented the dedicated `/entry/[id]` route from the original blueprint (deferred during Milestones 2-4 for speed): the homepage is now a single-purpose "start a new entry" screen that redirects to `/entry/[id]` on creation, and that route owns extraction, question generation, and answer capture
 - `GET`/`PATCH /api/entries/[id]`: fetch a single entry, and validate + persist `answers` (exactly as many non-empty strings as there are questions) and optional `additionalThoughts`

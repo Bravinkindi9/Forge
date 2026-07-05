@@ -6,6 +6,7 @@ import type { Entry } from "@/lib/entries-store";
 import { getStage } from "@/lib/entry-stage";
 import { EntryPreview, type ExtractionState, type QuestionsState } from "@/components/EntryPreview";
 import { AnswerForm } from "@/components/AnswerForm";
+import { DraftView, type DraftState } from "@/components/DraftView";
 
 export function EntryFlow({ entryId }: { entryId: string }) {
   const router = useRouter();
@@ -13,6 +14,7 @@ export function EntryFlow({ entryId }: { entryId: string }) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [extraction, setExtraction] = useState<ExtractionState>({ status: "idle" });
   const [questions, setQuestions] = useState<QuestionsState>({ status: "idle" });
+  const [draft, setDraft] = useState<DraftState>({ status: "idle" });
 
   useEffect(() => {
     void loadEntry();
@@ -27,12 +29,17 @@ export function EntryFlow({ entryId }: { entryId: string }) {
       if (!res.ok) throw new Error(data.error || "Entry not found.");
       setEntry(data.entry);
 
-      if (getStage(data.entry) === "new") {
+      const stage = getStage(data.entry);
+      if (stage === "new") {
         if (data.entry.inputType === "url") {
           void runExtraction();
         } else {
           void runQuestions();
         }
+      } else if (stage === "ready_for_draft") {
+        void runDraft();
+      } else if (stage === "complete") {
+        setDraft({ status: "done" });
       }
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Failed to load entry.");
@@ -80,6 +87,26 @@ export function EntryFlow({ entryId }: { entryId: string }) {
     }
   }
 
+  async function runDraft() {
+    setDraft({ status: "loading" });
+    try {
+      const res = await fetch("/api/draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to generate a draft.");
+      setEntry(data.entry);
+      setDraft({ status: "done" });
+    } catch (err) {
+      setDraft({
+        status: "error",
+        message: err instanceof Error ? err.message : "Failed to generate a draft.",
+      });
+    }
+  }
+
   async function submitAnswers(answers: string[], additionalThoughts: string) {
     const res = await fetch(`/api/entries/${entryId}`, {
       method: "PATCH",
@@ -89,6 +116,7 @@ export function EntryFlow({ entryId }: { entryId: string }) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to save your answers.");
     setEntry(data.entry);
+    void runDraft();
   }
 
   if (loadError) {
@@ -115,6 +143,7 @@ export function EntryFlow({ entryId }: { entryId: string }) {
         onRetryQuestions={runQuestions}
         onSubmit={submitAnswers}
       />
+      <DraftView entry={entry} draft={draft} onRetry={runDraft} />
       <button
         onClick={() => router.push("/")}
         className="self-start text-sm font-medium text-zinc-500 underline dark:text-zinc-400"
