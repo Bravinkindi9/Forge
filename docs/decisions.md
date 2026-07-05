@@ -4,6 +4,24 @@ Chronological record of notable engineering decisions and the reasoning behind t
 
 ---
 
+## `gemini-2.5-flash-lite` instead of `gemini-2.0-flash`
+
+**Decision:** `lib/ai.ts` uses `gemini-2.5-flash-lite`, not `gemini-2.0-flash`.
+
+**Why:** `gemini-2.0-flash` returned `429` errors with `limit: 0` for the free tier on this API key/project — the model itself reported zero free-tier quota, not "quota used up." Direct calls confirmed `gemini-2.5-flash-lite` and `gemini-flash-lite-latest` both have working free-tier quota on this key, while `gemini-2.0-flash-lite` also returned the same 0-quota error. Isolating the model name in `lib/ai.ts` (see below) meant this was a one-line fix.
+
+---
+
+## AI provider isolated entirely behind `lib/ai.ts`
+
+**Decision:** `lib/ai.ts` is the only file that imports `@ai-sdk/google` or knows the model name/provider. It exposes two provider-agnostic functions — `generateText(prompt)` and `generateStructured(prompt, schema)` — that every caller uses instead of talking to Gemini directly. The Gemini client is lazily constructed (same pattern as `lib/db.ts`), so `next build` never requires `GEMINI_API_KEY`.
+
+**Why:** Gemini is the only configured provider for V1 because of its free tier, but that's a cost/quota decision, not a permanent architectural commitment. Isolating it behind a generic interface means switching providers later (or adding a fallback) is a one-file change, and nothing else in the app needs to know or care which model answered.
+
+**Structured output for questions:** `generateStructured` uses the AI SDK's `generateObject` with a zod schema (`questionsSchema` in `lib/prompts.ts`) instead of asking for free text and regex-parsing it. This guarantees exactly three questions come back in a predictable shape, rather than hoping the model followed a numbered-list instruction.
+
+---
+
 ## `postgres` + `drizzle-orm/postgres-js` instead of `@vercel/postgres`
 
 **Decision:** Database access goes through the plain `postgres` driver and `drizzle-orm/postgres-js`, not the `@vercel/postgres` package.

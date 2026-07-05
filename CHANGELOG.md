@@ -4,6 +4,15 @@ All notable milestone-level progress for Forge is recorded here.
 
 ## Unreleased
 
+### Milestone 4 — Summary + Question Generation (Gemini)
+- `lib/ai.ts`: the only file that knows about Gemini/`@ai-sdk/google`. Exposes provider-agnostic `generateText(prompt)` and `generateStructured(prompt, schema)`, lazily connecting (same pattern as `lib/db.ts`) so `next build` never requires `GEMINI_API_KEY`
+- `lib/prompts.ts`: small, readable prompt builders (`summaryPrompt`, `questionsPrompt`) sharing a `VOICE_GUIDELINES` constant, plus a `questionsSchema` (zod) so question generation returns exactly three questions in a predictable shape via structured output rather than free-text parsing
+- `POST /api/questions`: generates a neutral summary (URL entries only) and exactly three reflection questions, persists both to the entry
+- Homepage auto-triggers question generation after a URL's extraction succeeds (or immediately for pasted text / raw thought), with a loading state, numbered question list, and retry-on-error banner
+- Switched from `gemini-2.0-flash` to `gemini-2.5-flash-lite` after the former returned `429`/`limit: 0` free-tier errors on this API key — see `docs/decisions.md`
+- Verified against the real Gemini API across all three input paths (raw thought, pasted text, URL): questions are specific and grounded in the actual content, not generic; summaries are neutral, factual, and don't hallucinate beyond the source material
+- Unit tests for the prompt builders and questions schema (pure logic, no network in tests)
+
 ### Milestone 3 — URL Extraction Pipeline
 - `lib/jina.ts`: extracts article title + content from a URL via Jina Reader's free `r.jina.ai` endpoint (no API key required)
 - `POST /api/extract`: takes an `entryId`, extracts its URL's content, and persists it to `extractedContent`

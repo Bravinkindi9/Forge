@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { detectInputType, isValidUrl } from "@/lib/detect-input";
-import { EntryPreview, type ExtractionState } from "@/components/EntryPreview";
+import { EntryPreview, type ExtractionState, type QuestionsState } from "@/components/EntryPreview";
 import type { Entry } from "@/lib/entries-store";
 
 export default function Home() {
@@ -11,9 +11,32 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [entry, setEntry] = useState<Entry | null>(null);
   const [extraction, setExtraction] = useState<ExtractionState>({ status: "idle" });
+  const [questions, setQuestions] = useState<QuestionsState>({ status: "idle" });
 
   const trimmed = input.trim();
   const invalidUrl = trimmed.length > 0 && detectInputType(trimmed) === "url" && !isValidUrl(trimmed);
+
+  async function runQuestions(entryId: string) {
+    setQuestions({ status: "loading" });
+    try {
+      const res = await fetch("/api/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to generate questions.");
+      }
+      setEntry(data.entry);
+      setQuestions({ status: "done" });
+    } catch (err) {
+      setQuestions({
+        status: "error",
+        message: err instanceof Error ? err.message : "Failed to generate questions.",
+      });
+    }
+  }
 
   async function runExtraction(entryId: string) {
     setExtraction({ status: "loading" });
@@ -29,6 +52,7 @@ export default function Home() {
       }
       setEntry(data.entry);
       setExtraction({ status: "done", title: data.title ?? null });
+      void runQuestions(entryId);
     } catch (err) {
       setExtraction({
         status: "error",
@@ -54,6 +78,8 @@ export default function Home() {
       setEntry(data.entry);
       if (data.entry.inputType === "url") {
         void runExtraction(data.entry.id);
+      } else {
+        void runQuestions(data.entry.id);
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -67,6 +93,7 @@ export default function Home() {
     setInput("");
     setError(null);
     setExtraction({ status: "idle" });
+    setQuestions({ status: "idle" });
   }
 
   return (
@@ -78,8 +105,10 @@ export default function Home() {
           <EntryPreview
             entry={entry}
             extraction={extraction}
+            questions={questions}
             onReset={handleReset}
             onRetryExtraction={() => runExtraction(entry.id)}
+            onRetryQuestions={() => runQuestions(entry.id)}
           />
         ) : (
           <>
