@@ -119,6 +119,17 @@ export function EntryFlow({ entryId }: { entryId: string }) {
     void runDraft();
   }
 
+  async function saveDraft(draftText: string) {
+    const res = await fetch(`/api/entries/${entryId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ draft: draftText }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to save your edit.");
+    setEntry(data.entry);
+  }
+
   if (loadError) {
     return (
       <div className="flex items-center justify-between gap-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
@@ -143,7 +154,7 @@ export function EntryFlow({ entryId }: { entryId: string }) {
         onRetryQuestions={runQuestions}
         onSubmit={submitAnswers}
       />
-      <DraftView entry={entry} draft={draft} onRetry={runDraft} />
+      <DraftView entry={entry} draft={draft} onRetry={runDraft} onSave={saveDraft} />
       <button
         onClick={() => router.push("/")}
         className="self-start text-sm font-medium text-zinc-500 underline dark:text-zinc-400"

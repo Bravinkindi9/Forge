@@ -4,6 +4,12 @@ All notable milestone-level progress for Forge is recorded here.
 
 ## Unreleased
 
+### Milestone 7 — Edit & Copy UI
+- `PATCH /api/entries/[id]` now also accepts `draft` edits (validated as a non-empty string)
+- `DraftView` is now editable: changes save automatically on blur (only when the text actually changed), plus a "Copy to clipboard" button with a "Copied!" confirmation
+- Copy failures (e.g. clipboard permission denied) now show a graceful fallback message instead of silently doing nothing — caught during manual verification when the automated browser sandbox denied clipboard access
+- Verified end-to-end: editing a draft persists via PATCH and survives reload; copy button correctly reports success or failure
+
 ### Milestone 6 — Draft Generation
 - `draftPrompt` added to `lib/prompts.ts`, sharing `VOICE_GUIDELINES` with the question prompt; instructs the model to return only the post text, grounded strictly in the user's own answers (no invented facts/opinions)
 - `POST /api/draft`: generates the single LinkedIn draft from summary + question/answer pairs + additional thoughts once answers exist, persists it to `draft`

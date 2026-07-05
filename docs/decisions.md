@@ -4,6 +4,16 @@ Chronological record of notable engineering decisions and the reasoning behind t
 
 ---
 
+## `gemini-2.5-flash-lite` free tier is a small daily cap, not just per-minute
+
+**Observation (Milestone 7):** During manual verification, `gemini-2.5-flash-lite` calls started failing with `429 Quota exceeded ... limit: 20`. Waiting the API's own suggested retry delay (30-100s) repeatedly did not clear it — each retry hit the same `limit: 20` error again. This suggests the free tier's `generate_content_free_tier_requests` quota for this key/project is a small daily allotment (not a per-minute rate limit that refills quickly), likely already partly consumed by earlier milestones' testing plus the model-comparison calls made while debugging the M4 quota issue.
+
+**How this was handled:** Per the project's quota safety rule, stopped making further Gemini calls once retries kept failing, and finished Milestone 7's edit/copy UI verification (which needs no AI calls) by seeding a test entry directly in the database with `draft` already populated.
+
+**Implication going forward:** Budget Gemini calls carefully during manual verification — a handful of test runs can meaningfully dent the daily allowance. If this recurs, check https://ai.dev/rate-limit for the account's actual quota before assuming it's just a transient rate limit.
+
+---
+
 ## `gemini-2.5-flash-lite` instead of `gemini-2.0-flash`
 
 **Decision:** `lib/ai.ts` uses `gemini-2.5-flash-lite`, not `gemini-2.0-flash`.

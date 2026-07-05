@@ -31,7 +31,11 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { answers, additionalThoughts } = body as { answers?: unknown; additionalThoughts?: unknown };
+  const { answers, additionalThoughts, draft } = body as {
+    answers?: unknown;
+    additionalThoughts?: unknown;
+    draft?: unknown;
+  };
 
   const changes: Parameters<typeof updateEntry>[1] = {};
 
@@ -56,6 +60,13 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "additionalThoughts must be a string or null." }, { status: 400 });
     }
     changes.additionalThoughts = additionalThoughts ? additionalThoughts.trim() : null;
+  }
+
+  if (draft !== undefined) {
+    if (typeof draft !== "string" || draft.trim().length === 0) {
+      return NextResponse.json({ error: "draft must be a non-empty string." }, { status: 400 });
+    }
+    changes.draft = draft;
   }
 
   const updated = await updateEntry(id, changes);
